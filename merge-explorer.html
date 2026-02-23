@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merge API Explorer — Carbon Arc</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c0d10;
+    --surface: #14161b;
+    --surface2: #1c1f27;
+    --border: #2a2d38;
+    --accent: #00e5a0;
+    --accent2: #0075ff;
+    --text: #e8eaf0;
+    --muted: #6b7080;
+    --error: #ff4d6a;
+    --warn: #ffb547;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  /* Header */
+  header {
+    grid-column: 1 / -1;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-mark svg { width: 18px; height: 18px; }
+
+  .logo-text {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .header-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+    margin: 0 8px;
+  }
+
+  .header-sub {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+  }
+
+  .status-pill {
+    margin-left: auto;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .status-pill.connected {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,160,0.08);
+  }
+
+  /* Sidebar */
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  input, select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+
+  input::placeholder { color: var(--muted); }
+
+  select option { background: var(--surface2); }
+
+  .cred-input {
+    position: relative;
+  }
+
+  .cred-input input {
+    padding-right: 36px;
+  }
+
+  .toggle-vis {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 2px;
+    display: flex;
+    align-items: center;
+  }
+
+  .toggle-vis:hover { color: var(--text); }
+
+  /* Endpoints */
+  .endpoint-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .ep-btn {
+    padding: 8px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+  }
+
+  .ep-btn:hover {
+    border-color: var(--accent2);
+    color: var(--text);
+  }
+
+  .ep-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,160,0.06);
+  }
+
+  /* Send button */
+  .send-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .send-btn:hover { background: #00ffb3; transform: translateY(-1px); }
+  .send-btn:active { transform: translateY(0); }
+  .send-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: none;
+  }
+
+  .send-btn.loading .spinner { display: block; }
+  .send-btn.loading .btn-text { opacity: 0.6; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Main area */
+  main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Request bar */
+  .request-bar {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+  }
+
+  .method-badge {
+    padding: 4px 10px;
+    background: rgba(0,117,255,0.15);
+    border: 1px solid rgba(0,117,255,0.3);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent2);
+    letter-spacing: 0.06em;
+  }
+
+  .url-display {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .url-display .url-accent { color: var(--text); }
+
+  .response-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .meta-badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .meta-badge.ok { background: rgba(0,229,160,0.1); color: var(--accent); border: 1px solid rgba(0,229,160,0.2); }
+  .meta-badge.err { background: rgba(255,77,106,0.1); color: var(--error); border: 1px solid rgba(255,77,106,0.2); }
+  .meta-badge.time { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+  /* Response area */
+  .response-area {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .response-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    background: var(--surface);
+  }
+
+  .tab-btn {
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: -1px;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; flex: 1; overflow: auto; }
+  .tab-content.active { display: flex; flex-direction: column; }
+
+  /* JSON viewer */
+  .json-output {
+    flex: 1;
+    padding: 24px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    overflow: auto;
+    white-space: pre;
+  }
+
+  .json-key { color: #7dd3fc; }
+  .json-string { color: #86efac; }
+  .json-number { color: #fca5a5; }
+  .json-bool { color: var(--warn); }
+  .json-null { color: var(--muted); }
+
+  /* Empty state */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    width: 48px;
+    height: 48px;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+
+  .empty-state p {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  /* Summary table */
+  .summary-table {
+    padding: 24px;
+    overflow: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+
+  th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(42,45,56,0.5);
+    vertical-align: top;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  /* Schema view */
+  .schema-view {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: auto;
+  }
+
+  .schema-field {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .field-name { color: #7dd3fc; flex: 1; }
+  .field-type { color: var(--warn); font-size: 11px; }
+  .field-val { color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 18 18" fill="none">
+        <path d="M3 9h12M9 3v12" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="logo-text">Carbon Arc <span>/</span> Merge Explorer</div>
+  </div>
+  <div class="header-divider"></div>
+  <div class="header-sub">accounting/v1</div>
+  <div class="status-pill" id="statusPill">● not connected</div>
+</header>
+
+<aside>
+  <div>
+    <div class="section-label">Credentials</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="input-group">
+        <label>API Key</label>
+        <div class="cred-input">
+          <input type="password" id="apiKey" placeholder="sk_test_..." />
+          <button class="toggle-vis" onclick="toggleVis('apiKey', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Account Token</label>
+        <div class="cred-input">
+          <input type="password" id="accountToken" placeholder="X-Account-Token..." />
+          <button class="toggle-vis" onclick="toggleVis('accountToken', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Endpoint</div>
+    <div class="endpoint-grid" id="endpointGrid">
+      <button class="ep-btn active" data-ep="accounts" onclick="selectEndpoint(this)">accounts</button>
+      <button class="ep-btn" data-ep="balance-sheets" onclick="selectEndpoint(this)">balance-sheets</button>
+      <button class="ep-btn" data-ep="cash-flow-statements" onclick="selectEndpoint(this)">cash-flow</button>
+      <button class="ep-btn" data-ep="income-statements" onclick="selectEndpoint(this)">income-stmt</button>
+      <button class="ep-btn" data-ep="invoices" onclick="selectEndpoint(this)">invoices</button>
+      <button class="ep-btn" data-ep="expenses" onclick="selectEndpoint(this)">expenses</button>
+      <button class="ep-btn" data-ep="contacts" onclick="selectEndpoint(this)">contacts</button>
+      <button class="ep-btn" data-ep="company-info" onclick="selectEndpoint(this)">company-info</button>
+      <button class="ep-btn" data-ep="transactions" onclick="selectEndpoint(this)">transactions</button>
+      <button class="ep-btn" data-ep="vendor-credits" onclick="selectEndpoint(this)">vendor-credits</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Params</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="input-group">
+        <label>page_size</label>
+        <input type="number" id="pageSize" value="10" min="1" max="100" />
+      </div>
+      <div class="input-group">
+        <label>custom endpoint (override)</label>
+        <input type="text" id="customEndpoint" placeholder="e.g. general-ledger-transactions" />
+      </div>
+    </div>
+  </div>
+
+  <button class="send-btn" id="sendBtn" onclick="sendRequest()">
+    <div class="spinner"></div>
+    <span class="btn-text">Send Request →</span>
+  </button>
+</aside>
+
+<main>
+  <div class="request-bar">
+    <div class="method-badge">GET</div>
+    <div class="url-display" id="urlDisplay">
+      <span style="color:var(--muted)">https://api.merge.dev/api/accounting/v1/</span><span class="url-accent" id="urlEndpoint">accounts</span>
+    </div>
+    <div class="response-meta" id="responseMeta"></div>
+  </div>
+
+  <div class="response-tabs">
+    <button class="tab-btn active" onclick="switchTab('json', this)">JSON</button>
+    <button class="tab-btn" onclick="switchTab('summary', this)">Summary</button>
+    <button class="tab-btn" onclick="switchTab('schema', this)">Schema</button>
+  </div>
+
+  <div class="response-area">
+    <div class="tab-content active" id="tab-json">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        </div>
+        <p>Enter credentials, select an endpoint<br/>and hit Send Request</p>
+      </div>
+      <div class="json-output" id="jsonOutput" style="display:none"></div>
+    </div>
+
+    <div class="tab-content" id="tab-summary">
+      <div class="summary-table" id="summaryContent">
+        <div class="empty-state" style="display:flex">
+          <p style="font-family:var(--mono);font-size:12px;color:var(--muted)">No data yet</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-schema">
+      <div class="schema-view" id="schemaContent">
+        <div class="empty-state" style="display:flex">
+          <p style="font-family:var(--mono);font-size:12px;color:var(--muted)">No data yet</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let currentEndpoint = 'accounts';
+let lastData = null;
+
+function toggleVis(id, btn) {
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.style.color = input.type === 'text' ? 'var(--accent)' : 'var(--muted)';
+  updateStatus();
+}
+
+function selectEndpoint(btn) {
+  document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentEndpoint = btn.dataset.ep;
+  document.getElementById('urlEndpoint').textContent = currentEndpoint;
+  document.getElementById('customEndpoint').value = '';
+}
+
+function updateStatus() {
+  const key = document.getElementById('apiKey').value;
+  const token = document.getElementById('accountToken').value;
+  const pill = document.getElementById('statusPill');
+  if (key && token) {
+    pill.textContent = '● ready';
+    pill.classList.add('connected');
+  } else {
+    pill.textContent = '● not connected';
+    pill.classList.remove('connected');
+  }
+}
+
+document.getElementById('apiKey').addEventListener('input', updateStatus);
+document.getElementById('accountToken').addEventListener('input', updateStatus);
+document.getElementById('customEndpoint').addEventListener('input', function() {
+  if (this.value) {
+    document.getElementById('urlEndpoint').textContent = this.value;
+    document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
+  } else {
+    document.getElementById('urlEndpoint').textContent = currentEndpoint;
+    document.querySelector('.ep-btn.active') || document.querySelector('.ep-btn[data-ep="accounts"]').classList.add('active');
+  }
+});
+
+async function sendRequest() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const accountToken = document.getElementById('accountToken').value.trim();
+  const pageSize = document.getElementById('pageSize').value || 10;
+  const customEp = document.getElementById('customEndpoint').value.trim();
+  const ep = customEp || currentEndpoint;
+
+  if (!apiKey || !accountToken) {
+    showError('Missing credentials — enter your API key and account token');
+    return;
+  }
+
+  const btn = document.getElementById('sendBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  const t0 = Date.now();
+  const url = `http://localhost:3131/?endpoint=${ep}&page_size=${pageSize}`;
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'X-Api-Key': apiKey,
+        'X-Account-Token': accountToken
+      }
+    });
+
+    const elapsed = Date.now() - t0;
+    const data = await res.json();
+    lastData = data;
+
+    showResponseMeta(res.status, elapsed);
+    renderJson(data);
+    renderSummary(data, ep);
+    renderSchema(data);
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('jsonOutput').style.display = 'block';
+
+  } catch(e) {
+    showError(`Network error: ${e.message}`);
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+function showResponseMeta(status, ms) {
+  const meta = document.getElementById('responseMeta');
+  const isOk = status >= 200 && status < 300;
+  meta.innerHTML = `
+    <span class="meta-badge ${isOk ? 'ok' : 'err'}">${status} ${isOk ? 'OK' : 'ERROR'}</span>
+    <span class="meta-badge time">${ms}ms</span>
+  `;
+}
+
+function showError(msg) {
+  document.getElementById('emptyState').style.display = 'none';
+  const out = document.getElementById('jsonOutput');
+  out.style.display = 'block';
+  out.innerHTML = `<span style="color:var(--error)">${msg}</span>`;
+  document.getElementById('responseMeta').innerHTML = `<span class="meta-badge err">ERROR</span>`;
+}
+
+function syntaxHighlight(json) {
+  const str = JSON.stringify(json, null, 2);
+  return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) return `<span class="json-key">${match}</span>`;
+      return `<span class="json-string">${match}</span>`;
+    }
+    if (/true|false/.test(match)) return `<span class="json-bool">${match}</span>`;
+    if (/null/.test(match)) return `<span class="json-null">${match}</span>`;
+    return `<span class="json-number">${match}</span>`;
+  });
+}
+
+function renderJson(data) {
+  document.getElementById('jsonOutput').innerHTML = syntaxHighlight(data);
+}
+
+function renderSummary(data, ep) {
+  const container = document.getElementById('summaryContent');
+  const results = data.results || (Array.isArray(data) ? data : [data]);
+
+  if (!results.length) {
+    container.innerHTML = '<div style="padding:24px;font-family:var(--mono);font-size:12px;color:var(--muted)">No results returned</div>';
+    return;
+  }
+
+  const keys = Object.keys(results[0]).slice(0, 8);
+  let html = `<table><thead><tr>${keys.map(k => `<th>${k}</th>`).join('')}</tr></thead><tbody>`;
+
+  results.forEach(row => {
+    html += '<tr>' + keys.map(k => {
+      const v = row[k];
+      const display = v === null ? '<span class="tag">null</span>' :
+                     typeof v === 'object' ? `<span class="tag">{object}</span>` :
+                     String(v).length > 40 ? String(v).slice(0,40)+'...' : String(v);
+      return `<td>${display}</td>`;
+    }).join('') + '</tr>';
+  });
+
+  html += `</tbody></table>`;
+  if (data.count !== undefined) {
+    html = `<div style="padding:16px 24px 0;font-family:var(--mono);font-size:11px;color:var(--muted)">${data.count} total records</div>` + `<div style="padding:0 12px">${html}</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function renderSchema(data) {
+  const container = document.getElementById('schemaContent');
+  const results = data.results || (Array.isArray(data) ? data : [data]);
+  if (!results.length) {
+    container.innerHTML = '<div style="padding:24px;font-family:var(--mono);font-size:12px;color:var(--muted)">No data to infer schema from</div>';
+    return;
+  }
+
+  const sample = results[0];
+  const fields = Object.entries(sample);
+  let html = '';
+
+  fields.forEach(([key, val]) => {
+    const type = val === null ? 'null' : Array.isArray(val) ? 'array' : typeof val;
+    const preview = val === null ? 'null' :
+                   Array.isArray(val) ? `[${val.length} items]` :
+                   typeof val === 'object' ? '{...}' :
+                   String(val).slice(0, 50);
+    html += `<div class="schema-field">
+      <span class="field-name">${key}</span>
+      <span class="field-type">${type}</span>
+      <span class="field-val">${preview}</span>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+</script>
+</body>
+</html>
